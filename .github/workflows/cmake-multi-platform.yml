@@ -65,7 +65,7 @@ jobs:
     - name: Python setup
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x' 
+        python-version: '3.12' 
         cache: 'pip' # caching pip dependencies
 
     - name: Pip install
@@ -106,8 +106,10 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.c_compiler == 'gcc' }}
       run: >
         CMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        CMAKE_C_COMPILER=${{ matrix.c_compiler }}
         CMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        LD_LIBRARY_PATH=/usr/lib/python3.12/site-packages/torch.libs/
+        Torch_DIR=/usr/lib/python3.12/site-packages/torch/share/cmake/Torch
         python3 setup.py develop
 
     # - name: Configure CMake - Linux / Clang

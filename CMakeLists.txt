@@ -51,6 +51,14 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
+
+  ######################################################################
+  # Find libtorch_python library
+  ######################################################################
+  find_package(Torch)
+  set(TORCH_LIBRARIES "")
+  append_torchlib_if_found(torch_python)
+  target_link_libraries(iganet_python INTERFACE ${TORCH_LIBRARIES})
 endif()
 
 ########################################################################
