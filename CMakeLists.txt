@@ -16,20 +16,61 @@
 #
 ########################################################################
 
-include(boost_preprocessor)
+cmake_minimum_required (VERSION 3.24)
+
+########################################################################
+#
+# Project: IgANet-Python
+#
+########################################################################
+project(IgANet-Python)
+
+add_library(iganet_python INTERFACE)
+add_library(iganet::python ALIAS iganet_python)
+
+target_include_directories(iganet_python INTERFACE ${PROJECT_BINARY_DIR}/pyiganet/csrc)
+target_include_directories(iganet_python INTERFACE ${PROJECT_SOURCE_DIR}/pyiganet/csrc)
+
+########################################################################
+# IgANets (core)
+########################################################################
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  include(FetchContent)
+  FetchContent_Declare(
+    iganet_core
+    GIT_REPOSITORY https://github.com/IgANets/iganet.git
+    GIT_TAG modularized
+  )
+  set(IGANET_BUILD_EXAMPLES  OFF CACHE BOOL "" FORCE)  
+  FetchContent_MakeAvailable(iganet_core)
+  FetchContent_GetProperties(iganet_core)
+  
+  ######################################################################
+  # Set C++ standard
+  ######################################################################
+  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
+
+########################################################################
+# Pybind11
+########################################################################
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(pybind11)
 
 ########################################################################
 # Options
 ########################################################################
-
+# Set a default coefficient numeric types if not specified
 if(NOT PYIGANET_COEFF_TYPE)
   set(PYIGANET_COEFF_TYPE double CACHE STRING
     "Coefficient type(float, double)" FORCE)
 endif()
 set_property(CACHE PYIGANET_COEFF_TYPE PROPERTY STRINGS "float" "double")
 
-message("PyIgaNet options:")
+message("")
+message("PyIgANet options:")
 message("PYIGANET_COEFF_TYPE................: ${PYIGANET_COEFF_TYPE}")
 message("")
 
@@ -38,14 +79,14 @@ message("")
 ########################################################################
 
 # Clean output directory
-file(GLOB_RECURSE FILES_AND_DIRS "${CMAKE_CURRENT_BINARY_DIR}/*")
+file(GLOB_RECURSE FILES_AND_DIRS "${PROJECT_BINARY_DIR}/pyiganet/*")
 foreach(ITEM ${FILES_AND_DIRS})
   file(REMOVE_RECURSE ${ITEM})
 endforeach()
 
 # Config
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pyconfig.hpp.in
-  ${CMAKE_CURRENT_BINARY_DIR}/pyconfig.hpp @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/pyiganet/csrc/pyconfig.hpp.in
+  ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyconfig.hpp @ONLY)
 
 # Create list of PyBind11 init subroutines
 list(APPEND init_core "init_options")
@@ -57,8 +98,8 @@ foreach(ROWS RANGE 1 2)
     set(SUFFIX "_${ROWS}_${COLS}")
     list(APPEND init_core "init_BlockTensor${SUFFIX}")
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pyblocktensor.cxx.in
-      ${CMAKE_CURRENT_BINARY_DIR}/pyblocktensor${SUFFIX}.cxx @ONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/pyiganet/csrc/pyblocktensor.cxx.in
+      ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyblocktensor${SUFFIX}.cxx @ONLY)
   endforeach()
 endforeach()
 
@@ -81,13 +122,13 @@ foreach(GEODIM RANGE 1 2)
     string(REPLACE "," ";" PARDIM ${DEGREES})
     list(LENGTH PARDIM PARDIM)
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pybspline.cxx.in
-      ${CMAKE_CURRENT_BINARY_DIR}/pybspline${SUFFIX}.cxx @ONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/pyiganet/csrc/pybspline.cxx.in
+      ${PROJECT_BINARY_DIR}/pyiganet/csrc/pybspline${SUFFIX}.cxx @ONLY)
   endforeach()
 endforeach()
 
 # Create main PyIgANet source file
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+file(WRITE ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
   "/**
    @file pyiganet/pyiganet.cxx
 
@@ -109,11 +150,11 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
 namespace py = pybind11;\n\n")
 
 foreach(init IN LISTS init_core init_splines)
-  file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+  file(APPEND ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
     "void ${init}(py::module_ &);\n")
 endforeach()
 
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+file(APPEND ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
   "\n\n/**
    @brief Creates IgANet Python module
 */
@@ -133,11 +174,11 @@ core.doc() = \"IgANet (Physics-informed isogeometric analysis neural network): C
 ")
 
 foreach(init IN LISTS init_core)
-  file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+  file(APPEND ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
     "${init}(core);\n")
 endforeach()
 
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+file(APPEND ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
   "\n
 
 py::module splines = m.def_submodule(\"splines\");
@@ -149,42 +190,15 @@ splines.doc() = \"IgANet (Physics-informed isogeometric analysis neural network)
 ")
 
 foreach(init IN LISTS init_splines)
-  file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+  file(APPEND ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
     "${init}(splines);\n")
 endforeach()
 
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pyiganet.cxx
+file(APPEND ${PROJECT_BINARY_DIR}/pyiganet/csrc/pyiganet.cxx
     "}\n")
 
-# Include directories
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-file(GLOB SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx ${CMAKE_CURRENT_BINARY_DIR}/*.cxx)
+file(GLOB SRCS ${PROJECT_SOURCE_DIR}/pyiganet/csrc/*.cxx ${PROJECT_BINARY_DIR}/pyiganet/csrc/*.cxx)
 
 pybind11_add_module(pyiganet_core MODULE ${SRCS})
-
-# LibTorch
-target_include_directories(pyiganet_core PUBLIC ${TORCH_INCLUDE_DIRS})
-target_link_libraries(pyiganet_core PUBLIC pugixml)
-
-# Intel Extension for PyTorch
-if (IPEX_FOUND)
-  target_link_libraries(${name} PUBLIC ${TORCH_IPEX_LIBRARIES})
-endif()
-
-if (IGANET_WITH_GISMO)
-  target_link_libraries(pyiganet_core PUBLIC gismo_static)
-endif()
-
-if (IGANET_WITH_MATPLOT)
-  target_link_libraries(pyiganet_core PUBLIC Matplot++::matplot)
-endif()
-
-if (IGANET_WITH_MPI)
-  target_link_libraries(pyiganet_core PUBLIC MPI::MPI_CXX)
-endif()
-
-if (IGANET_WITH_OPENMP)
-  target_link_libraries(pyiganet_core PUBLIC OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(pyiganet_core PRIVATE iganet::core)
+target_link_libraries(pyiganet_core PRIVATE iganet::python)
