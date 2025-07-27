@@ -70,7 +70,7 @@ jobs:
         CMAKE_C_COMPILER=${{ matrix.c_compiler }}
         CMAKE_BUILD_TYPE=${{ matrix.build_type }}
         LD_LIBRARY_PATH=/usr/lib/python3.12/site-packages/torch.libs/
-        Torch_DIR=/usr/lib/python3.12/site-packages/torch/share/cmake/Torch
+        Torch_DIR=$Python3_ROOT_DIR/lib/python3.12/site-packages/torch/share/cmake/Torch
         python -m pip install --editable .
 
     # - name: Configure CMake - Linux / Clang
