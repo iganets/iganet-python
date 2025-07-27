@@ -50,9 +50,9 @@ jobs:
         python-version: '3.12' 
         cache: 'pip' # caching pip dependencies
 
-    #- name: Pip install
-    #  run: |
-    #      pip install setuptools torch        
+    - name: Pip install
+      run: |
+          pip install -r requirements.txt
 
     - name: Install Clang - Linux
       if: ${{ matrix.os == 'ubuntu-latest' && matrix.c_compiler == 'clang' }}
