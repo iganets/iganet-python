@@ -71,7 +71,7 @@ jobs:
         CMAKE_BUILD_TYPE=${{ matrix.build_type }}
         LD_LIBRARY_PATH=/usr/lib/python3.12/site-packages/torch.libs/
         Torch_DIR=/usr/lib/python3.12/site-packages/torch/share/cmake/Torch
-        python3 setup.py develop
+        python -m pip install --editable .
 
     # - name: Configure CMake - Linux / Clang
     #   # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
