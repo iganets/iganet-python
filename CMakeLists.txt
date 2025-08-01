@@ -18,6 +18,8 @@
 
 cmake_minimum_required (VERSION 3.24)
 
+include(FetchContent)
+
 ########################################################################
 #
 # Project: IgANet-Python
@@ -28,19 +30,25 @@ project(IgANet-Python)
 add_library(iganet_python INTERFACE)
 add_library(iganet::python ALIAS iganet_python)
 
-target_include_directories(iganet_python INTERFACE ${PROJECT_BINARY_DIR}/pyiganet/csrc)
-target_include_directories(iganet_python INTERFACE ${PROJECT_SOURCE_DIR}/pyiganet/csrc)
+target_include_directories(iganet_python INTERFACE ${PROJECT_BINARY_DIR}/pyiganet/csrc ${PROJECT_SOURCE_DIR}/pyiganet/csrc)
 
 ########################################################################
 # IgANets (core)
 ########################################################################
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  include(FetchContent)
-  FetchContent_Declare(
-    iganet_core
-    URL https://github.com/IgANets/iganet/archive/refs/heads/master.zip
-  )
-  set(IGANET_BUILD_EXAMPLES  OFF CACHE BOOL "" FORCE)  
+
+  if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    FetchContent_Declare(
+      iganet_core
+      GIT_REPOSITORY https://github.com/iganets/iganet.git
+    )
+  else()  
+    FetchContent_Declare(
+      iganet_core
+      URL https://github.com/IgANets/iganet/archive/refs/heads/master.zip
+    )
+  endif()
+     
   FetchContent_MakeAvailable(iganet_core)
   FetchContent_GetProperties(iganet_core)
   
