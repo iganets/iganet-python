@@ -21,7 +21,7 @@
 
 #include <pyconfig.hpp>
 
-#include <options.hpp>
+#include <core/options.hpp>
 
 namespace py = pybind11;
 
