@@ -22,7 +22,7 @@
 
 #include <pyconfig.hpp>
 
-#include <bspline.hpp>
+#include <splines/bspline.hpp>
 
 #define DEF(name, description)                                          \
   .def(#name,                                                           \
