@@ -18,7 +18,7 @@
 
 #include <pyconfig.hpp>
 
-#include <bspline.hpp>
+#include <splines/bspline.hpp>
 
 namespace py = pybind11;
 
